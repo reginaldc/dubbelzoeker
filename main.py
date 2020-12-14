@@ -31,7 +31,7 @@ class Dubbelzoeker(QDialog):
         self.vid_ext = [".avi", ".divx", ".mpg", ".mpeg", ".vob", ".m4v", ".mp4", ".flv", ".webm",\
         ".mov", ".wmv", ".mkv"]
         self.audio_ext = [".mp3",".wav",".flac",".ape",".wma",".ogg",".aac",".ac3"]
-        self.document_ext = [".doc",".htm","html",".pdf", ".xps", ".cbz", ".epub",".azw",".azw3",".azw4",".cbr",".chm",\
+        self.document_ext = [".doc",".htm",".html",".pdf", ".xps", ".cbz", ".epub",".azw",".azw3",".azw4",".cbr",".chm",\
             ".djvu",".djv",".docx",".fb2",".lit",".mobi",".pdb",".txt"]
         self.custom_ext = self.read_extensions()            
         self.dirlist = []
@@ -52,6 +52,8 @@ class Dubbelzoeker(QDialog):
         self.ui.lneVolume.textChanged.connect(self.check_lne_archief)
         self.ui.btnLoadDb.clicked.connect(self.load_new_database)
         self.ui.btnSaveDb.clicked.connect(self.save_db)
+        self.ui.btnRemoveExt.clicked.connect(self.remove_filetype)
+        self.ui.btnAddExt.clicked.connect(self.add_filetype)
 
     
     # database aanmaken als die niet bestaat
@@ -146,9 +148,7 @@ class Dubbelzoeker(QDialog):
 
     def scan_for_dubbels(self):
         self.ui.btnSaveDb.setEnabled(False)
-        self.ui.btnLoadDb.setEnabled(False)
-        for i in range(self.ui.lstFiletype.count()):
-            self.filetypes.append(self.ui.lstFiletype.item(i).text())
+        self.ui.btnLoadDb.setEnabled(False)        
         items = []
         for x in range(self.ui.lstDirectories.count()):
             items.append(self.ui.lstDirectories.item(x).text())
@@ -258,9 +258,25 @@ class Dubbelzoeker(QDialog):
         selected = self.ui.lstDirectories.selectedItems()
         if not selected: return
         for item in selected:
-            selectedfolder = item.text
+            selectedfolder = item.text()
             self.ui.lstDirectories.takeItem(self.ui.lstDirectories.row(item))
             self.dirlist.remove(selectedfolder)
+
+    def remove_filetype(self):
+        selected = self.ui.lstFiletype.selectedItems()
+        if not selected: return
+        for item in selected:            
+            ext = item.text()
+            self.ui.lstFiletype.takeItem(self.ui.lstFiletype.row(item))
+            self.filetypes.remove(ext)
+
+    def add_filetype(self):
+        if len(self.ui.lneExt.text()) > 0:
+            filetype = self.ui.lneExt.text()
+            if not filetype.startswith("."):
+                filetype = "." + filetype
+            self.ui.lstFiletype.addItem(filetype)
+            self.filetypes.append(filetype)
 
     def deleteItem(self, lst, itemName):
         items_list = lst.findItems(itemName,QtCore.Qt.MatchExactly)
@@ -271,40 +287,48 @@ class Dubbelzoeker(QDialog):
     def check_audio(self):
         if self.ui.checkAudio.isChecked():
             self.ui.lstFiletype.addItems(self.audio_ext)
+            self.filetypes.append(self.audio_ext)
         else:
             for ext in self.audio_ext:
                 self.deleteItem(self.ui.lstFiletype, ext)
+                self.filetypes.remove(ext)
 
     def check_custom(self):
         if self.ui.checkCustom.isChecked():
             self.ui.lstFiletype.addItems(self.custom_ext)
+            self.filetypes = self.filetypes + self.custom_ext
         else:
             for ext in self.custom_ext:
                 self.deleteItem(self.ui.lstFiletype, ext)
+                self.filetypes.remove(ext)
 
 
     def check_pictures(self):
         if self.ui.checkPic.isChecked():
             self.ui.lstFiletype.addItems(self.pic_ext)
+            self.filetypes = self.filetypes + self.pic_ext
         else:
             for ext in self.pic_ext:
                 self.deleteItem(self.ui.lstFiletype, ext)
-
+                self.filetypes.remove(ext)
 
     def check_vids(self):
         if self.ui.checkVid.isChecked():
             self.ui.lstFiletype.addItems(self.vid_ext)
+            self.filetypes = self.filetypes + self.vid_ext
         else:
             for ext in self.vid_ext:
                 self.deleteItem(self.ui.lstFiletype, ext)
-
+                self.filetypes.remove(ext)
 
     def check_docs(self):
         if self.ui.checkDoc.isChecked():
             self.ui.lstFiletype.addItems(self.document_ext)
+            self.filetypes = self.filetypes + self.document_ext                   
         else:
             for ext in self.document_ext:                
                 self.deleteItem(self.ui.lstFiletype, ext)
+                self.filetypes.remove(ext)
 
     def manage_custom_extensions(self):
         self.customdlg = CustomExtension(self)
